@@ -14,8 +14,8 @@ const server = http.createServer(http)
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-
-
+const port = process.env.port||3001
+const port1 = process.env.port||3002
 // Socket connection code
 const io = new Server(server, {
     cors: {
@@ -217,8 +217,8 @@ keyindex++;
       },5000000)
 
 server.listen(3002, () => {
-    console.log('server is live')
+    console.log('server is live',port1)
 })
-app.listen(3001, () => {
-    console.log('app is live')
+app.listen(port, () => {
+    console.log('app is live',port)
 })

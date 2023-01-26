@@ -14,10 +14,12 @@ const server = http.createServer(http)
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
+
 const port = process.env.port||3001
-const port1 = process.env.port||3002
+
+const httpServer = app.listen(port, () => {console.log(`Server listening on port ${port}`)});
 // Socket connection code
-const io = new Server(server, {
+const io = new Server(httpServer, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"],
@@ -168,7 +170,7 @@ app.post('/login', (req, res) => {
     
  })
  
-
+app.get('/',(req,res)=>{res.send("ok working")})
  // Score api's
  var counter=0,keyindex=0;
  const apikeys=[
@@ -216,9 +218,9 @@ keyindex++;
         
       },5000000)
 
-server.listen(3002, () => {
-    console.log('server is live',port1)
-})
-app.listen(port, () => {
-    console.log('app is live',port)
-})
+// server.listen(port1, () => {
+//     console.log('server is live',port1)
+// })
+// app.listen(port, () => {
+//     console.log('app is live',port)
+// })

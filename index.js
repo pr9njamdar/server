@@ -27,15 +27,24 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-    console.log(socket.id);
+  
 
-    socket.on("send-message", (message) => {
-        socket.broadcast.emit('recieve-message', message)
+    socket.on("send-message", ({message,username,room}) => {
+        // console.log({message,username,room})
+        socket.to(room).emit('recieve-message',{message,username})
+        // socket.broadcast.emit('recieve-message', {message,name})
     });
 
-    socket.on('user-joined', (username) => {
-        socket.broadcast.emit('user-sucessfully-joined', username);
+    socket.on('user-joined', ({username,room}) => {
+        socket.join(room);
+        console.log({username,room})
+        socket.to(room).emit('user-sucessfully-joined',username)
+        // socket.broadcast.emit('user-sucessfully-joined', username);
     });
+    socket.on('user_left',({username,room})=>{
+        socket.to(room).emit('member_left',username);
+        console.log(`${username} left the chat...`)
+    })
     
 })
 
@@ -113,31 +122,33 @@ app.post('/login', (req, res) => {
 
 })
 
- app.get('/teammembers', (req, res) => {
-     Rooms.findOne({ name: 'Room2' }, (err, room) => {
+ app.post('/teammembers', (req, res) => {
+     Rooms.findOne({ name: req.body.room }, (err, room) => {
          if (err) {
              console.log('nothing found')
              res.send('nothing')
          }
          else {
-             console.log(room)
-             res.send(room)
+             console.log(room.members)
+             res.send(room.members)
          }
      })
  })
 
  app.post('/removeuser', (req, res) => {
-     Rooms.findOne({ name: 'Room2' }, (error, room) => {
+     Rooms.findOne({ name: req.body.room }, (error, room) => {
          if (error) {
              console.log('nothing found')
              res.send('nothing')
          }
          else {
-             Rooms.findOneAndUpdate({ name: 'Room2' }, { $pull: { members: { membername: req.body.name, team: 'MI' } } }, (error) => {
+             Rooms.findOneAndUpdate({ name: req.body.room }, { $pull: { members: { membername: req.body.name, team: req.body.team } } }, (error) => {
                  if (error) {
                      res.send('error')
                  }
                 else {
+                  
+                    
                      console.log('member removed successfuly')
                      res.send('logged out succesfully')
                  }
@@ -154,12 +165,34 @@ app.post('/login', (req, res) => {
             res.send('no room found')
         }
         else {
-            
-            
-             Rooms.findOneAndUpdate({ name: req.body.room }, { $push: { members: { membername: req.body.name, team: 'MI' } } }, () => {
+            var check 
+            console.log(room.members)
+            for (var i=0;i<room.members.length;i++){
+                if(room.members[i].membername==req.body.name){
+                  check=true
+                   break
+                }
+            }
+            if(check==true){
+                res.send(false)
+            }
+            else{
+                Rooms.findOneAndUpdate({ name: req.body.room }, { $push: { members: { membername: req.body.name, team: req.body.team } } }, () => {
                  
-                 res.send('member re-registered')
-             })
+                    res.send(true)
+                })
+            }
+            
+            // Rooms.findOne({name:req.body.room,membername:req.body.name},(err,room)=>{
+            //     if(err){res.send(err)}
+            //     if(room){res.send(false)}
+            //     else{ Rooms.findOneAndUpdate({ name: req.body.room }, { $push: { members: { membername: req.body.name, team: req.body.team } } }, () => {
+                 
+            //         res.send(true)
+                // })}
+            // })
+            
+            
 
 
 
